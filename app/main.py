@@ -44,8 +44,11 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
         return {"error": "Task not found"}
 
     return {
-        "id": task.id,
-        "task_type": task.task_type,
-        "priority": task.priority,
-        "status": task.status
-    }
+    "id": task.id,
+    "task_type": task.task_type,
+    "priority": task.priority,
+    "status": task.status,
+    "result": task.result,
+    "created_at": task.created_at,
+    "updated_at": task.updated_at
+}

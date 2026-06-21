@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, DateTime
+from datetime import datetime, UTC
 from app.database import Base
 
 class Task(Base):
@@ -9,3 +10,15 @@ class Task(Base):
     payload = Column(String)
     priority = Column(Integer)
     status = Column(String)
+    result = Column(String, nullable=True)
+
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC)
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC)
+    )
