@@ -2,7 +2,6 @@ def send_email(payload):
     print(f"Sending email: {payload}")
     return f"Email sent: {payload}"
 
-
 def generate_report(payload):
     print(f"Generating report: {payload}")
     return f"Report generated: {payload}"

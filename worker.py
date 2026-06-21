@@ -5,6 +5,12 @@ from app.handlers import TASK_HANDLERS
 from datetime import datetime, UTC
 import time
 
+from app.circuit_breaker import (
+    can_execute,
+    record_success,
+    record_failure
+)
+
 print("Worker started...")
 
 while True:
@@ -24,15 +30,28 @@ while True:
     db = SessionLocal()
 
     try:
+
         task = db.query(Task).filter(Task.id == task_id).first()
 
         if not task:
             print("Task not found in DB")
-            db.close()
+            continue
+
+        if not can_execute():
+
+            task.status = "FAILED"
+            task.result = "Circuit breaker open"
+            task.updated_at = datetime.now(UTC)
+
+            db.commit()
+
+            print("CIRCUIT OPEN - TASK REJECTED")
+
             continue
 
         task.status = "PROCESSING"
         task.updated_at = datetime.now(UTC)
+
         db.commit()
 
         print(f"Processing task: {task.task_type}")
@@ -42,6 +61,8 @@ while True:
         if handler:
 
             result = handler(task.payload)
+
+            record_success()
 
             task.result = result
             task.status = "COMPLETED"
@@ -59,12 +80,18 @@ while True:
 
     except Exception as e:
 
-        print("ERROR:", e)
+        record_failure()
+
+        print(f"ERROR: {e}")
 
         if task:
+
             task.status = "FAILED"
             task.result = str(e)
+            task.updated_at = datetime.now(UTC)
+
             db.commit()
 
     finally:
+
         db.close()
