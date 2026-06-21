@@ -29,7 +29,14 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
     db.add(new_task)
     db.commit()
-    r.lpush("task_queue", task_id)
+    if task.priority >= 8:
+        r.lpush("high_priority_queue", task_id)
+
+    elif task.priority >= 4:
+        r.lpush("medium_priority_queue", task_id)
+
+    else:
+        r.lpush("low_priority_queue", task_id)
 
     return {
         "task_id": task_id,
