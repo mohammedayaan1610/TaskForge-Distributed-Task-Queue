@@ -11,6 +11,7 @@ class Task(Base):
     priority = Column(Integer)
     status = Column(String)
     result = Column(String, nullable=True)
+    retry_count = Column(Integer, default=0)
 
     created_at = Column(
         DateTime,

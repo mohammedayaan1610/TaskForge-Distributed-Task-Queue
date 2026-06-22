@@ -59,3 +59,13 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
     "created_at": task.created_at,
     "updated_at": task.updated_at
 }
+  
+@app.get("/queue-status")
+def queue_status():
+
+    return {
+        "high_priority_queue": r.llen("high_priority_queue"),
+        "medium_priority_queue": r.llen("medium_priority_queue"),
+        "low_priority_queue": r.llen("low_priority_queue"),
+        "dead_letter_queue": r.llen("dead_letter_queue")
+    }    

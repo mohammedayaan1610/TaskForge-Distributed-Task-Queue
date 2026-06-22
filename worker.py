@@ -4,12 +4,11 @@ from app.models import Task
 from app.handlers import TASK_HANDLERS
 from datetime import datetime, UTC
 import time
+import random
 
-from app.circuit_breaker import (
-    can_execute,
-    record_success,
-    record_failure
-)
+from app.circuit_breaker import can_execute, record_success, record_failure
+
+MAX_RETRIES = 5
 
 print("Worker started...")
 
@@ -28,6 +27,7 @@ while True:
     print(f"Found task: {task_id}")
 
     db = SessionLocal()
+    task = None
 
     try:
 
@@ -38,6 +38,9 @@ while True:
             continue
 
         if not can_execute():
+    
+    
+            r.lpush("dead_letter_queue", task.id)
 
             task.status = "FAILED"
             task.result = "Circuit breaker open"
@@ -45,7 +48,7 @@ while True:
 
             db.commit()
 
-            print("CIRCUIT OPEN - TASK REJECTED")
+            print("CIRCUIT OPEN - TASK MOVED TO DLQ")
 
             continue
 
@@ -72,6 +75,11 @@ while True:
             task.status = "FAILED"
             task.result = f"No handler found for {task.task_type}"
 
+            r.lpush(
+                "dead_letter_queue",
+                task.id
+            )
+
         task.updated_at = datetime.now(UTC)
 
         db.commit()
@@ -80,17 +88,54 @@ while True:
 
     except Exception as e:
 
-        record_failure()
-
+        
         print(f"ERROR: {e}")
 
         if task:
 
-            task.status = "FAILED"
-            task.result = str(e)
-            task.updated_at = datetime.now(UTC)
+            task.retry_count += 1
 
-            db.commit()
+            if task.retry_count < MAX_RETRIES:
+
+                wait_time = (2**task.retry_count) + random.uniform(0, 1)
+
+                print(
+                    f"Retry {task.retry_count}/{MAX_RETRIES} "
+                    f"in {wait_time:.2f} seconds"
+                )
+
+                time.sleep(wait_time)
+
+                task.status = "PENDING"
+                task.updated_at = datetime.now(UTC)
+
+                db.commit()
+
+                if task.priority >= 8:
+
+                    r.lpush("high_priority_queue", task.id)
+
+                elif task.priority >= 4:
+
+                    r.lpush("medium_priority_queue", task.id)
+
+                else:
+
+                    r.lpush("low_priority_queue", task.id)
+
+            else:
+                
+                record_failure()
+
+                r.lpush("dead_letter_queue", task.id)
+                
+                task.result = f"Max retries exceeded: {str(e)}"
+                task.status = "FAILED"
+                task.updated_at = datetime.now(UTC)
+
+                db.commit()
+
+                print("Task permanently failed")
 
     finally:
 
