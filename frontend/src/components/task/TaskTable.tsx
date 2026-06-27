@@ -231,21 +231,19 @@ export function TaskTable({ tasks, isLoading, onTaskClick, onClearAll, onRefresh
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#1e1e30]">
-              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">
-                <ThButton field="task_type" label="Type" />
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">Task ID</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">Original File</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">Target Format</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">
                 <ThButton field="priority" label="Priority" />
               </th>
               <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">
                 <ThButton field="status" label="Status" />
               </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b] hidden lg:table-cell">Result</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b] hidden md:table-cell">Retries</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">
                 <ThButton field="created_at" label="Created" />
               </th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b]">Completed Time</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-[#64748b] text-right">Download</th>
             </tr>
           </thead>
           <tbody>
@@ -275,17 +273,14 @@ export function TaskTable({ tasks, isLoading, onTaskClick, onClearAll, onRefresh
                   className="border-b border-[#1e1e30]/50 hover:bg-[#14141f] cursor-pointer transition-colors group"
                 >
                   <td className="px-4 py-3">
-                    <span className="text-xs font-medium text-[#94a3b8] capitalize bg-[#1a1a2e] px-2 py-0.5 rounded">
-                      {task.task_type}
+                    <span className="text-xs font-medium text-[#f1f5f9] truncate block max-w-32" title={task.original_filename || 'Unknown'}>
+                      {task.original_filename || 'Unknown'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-0.5">
-                      <span className="text-xs text-[#64748b] font-mono">
-                        {task.id.slice(0, 8)}…
-                      </span>
-                      <CopyButton text={task.id} />
-                    </div>
+                    <span className="text-xs font-medium text-[#94a3b8] uppercase bg-[#1a1a2e] px-2 py-0.5 rounded border border-[#2a2a42]">
+                      {task.target_format || 'N/A'}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -308,20 +303,35 @@ export function TaskTable({ tasks, isLoading, onTaskClick, onClearAll, onRefresh
                   <td className="px-4 py-3">
                     <StatusBadge status={task.status} pulse />
                   </td>
-                  <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="text-xs text-[#64748b] max-w-32 truncate block">
-                      {truncate(task.result ?? '—', 35)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-xs text-[#64748b] tabular-nums">{task.retry_count}</span>
-                  </td>
                   <td className="px-4 py-3">
                     <span className="text-xs text-[#64748b]">
                       {task.created_at
                         ? format(new Date(task.created_at), 'MMM d, HH:mm')
                         : '—'}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs text-[#64748b]">
+                      {task.status === 'COMPLETED' && task.updated_at
+                        ? format(new Date(task.updated_at), 'MMM d, HH:mm')
+                        : '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {task.status === 'COMPLETED' ? (
+                      <a
+                        href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/download/${task.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[#6366f1]/10 text-[#818cf8] hover:bg-[#6366f1]/20 transition-all border border-[#6366f1]/20"
+                        title="Download converted file"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-[#64748b]">Wait</span>
+                    )}
                   </td>
                 </motion.tr>
               ))

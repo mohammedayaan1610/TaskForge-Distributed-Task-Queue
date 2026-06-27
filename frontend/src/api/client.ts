@@ -9,8 +9,23 @@ const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
   },
   timeout: 10000,
+});
+
+// ─── Request Interceptor (Cache Busting) ───────────────────────────────────────
+apiClient.interceptors.request.use((config) => {
+  if (config.method?.toLowerCase() === 'get') {
+    // Append a unique timestamp to all GET requests to prevent browser caching
+    config.params = {
+      ...config.params,
+      _t: Date.now(),
+    };
+  }
+  return config;
 });
 
 // ─── Response Interceptor ──────────────────────────────────────────────────────

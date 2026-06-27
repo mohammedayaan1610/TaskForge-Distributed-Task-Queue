@@ -4,8 +4,12 @@ import type { Task, TaskCreate, TaskCreateResponse } from '../types';
 /**
  * Create a new task in the queue.
  */
-export const createTask = async (data: TaskCreate): Promise<TaskCreateResponse> => {
-  const response = await apiClient.post<TaskCreateResponse>('/tasks', data);
+export const createTask = async (data: FormData): Promise<TaskCreateResponse> => {
+  const response = await apiClient.post<TaskCreateResponse>('/tasks', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 

@@ -184,10 +184,10 @@ export function TaskDrawer({ task, onClose }: TaskDrawerProps) {
                 </div>
               </div>
 
-              {/* Result */}
-              {task.result && (
+              {/* Result & Metrics */}
+              {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Result</h3>
+                  <h3 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Result Details</h3>
                   <div
                     className={cn(
                       'rounded-lg p-3 border',
@@ -196,14 +196,36 @@ export function TaskDrawer({ task, onClose }: TaskDrawerProps) {
                         : 'bg-red-500/5 border-red-500/20'
                     )}
                   >
-                    <pre
-                      className={cn(
-                        'text-xs whitespace-pre-wrap break-all font-mono leading-relaxed',
-                        task.status === 'COMPLETED' ? 'text-emerald-300' : 'text-red-300'
-                      )}
-                    >
-                      {task.result}
-                    </pre>
+                    {task.status === 'COMPLETED' && (
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <p className="text-[#64748b] mb-0.5">Duration</p>
+                          <p className="text-emerald-300 font-medium">
+                            {task.conversion_duration ? `${task.conversion_duration}s` : '—'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#64748b] mb-0.5">Size</p>
+                          <p className="text-emerald-300 font-medium">
+                            {task.output_size_bytes ? `${(task.output_size_bytes / 1024 / 1024).toFixed(2)} MB` : '—'}
+                          </p>
+                        </div>
+                        {task.target_format && (
+                          <div className="col-span-2">
+                            <p className="text-[#64748b] mb-0.5">Format</p>
+                            <p className="text-emerald-300 font-medium uppercase">{task.target_format}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {task.status === 'FAILED' && (
+                      <div>
+                        <p className="text-[#64748b] text-xs mb-1">Error Reason</p>
+                        <pre className="text-xs whitespace-pre-wrap break-all font-mono leading-relaxed text-red-300 max-h-48 overflow-y-auto">
+                          {task.error_message || task.result || 'Unknown error occurred'}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

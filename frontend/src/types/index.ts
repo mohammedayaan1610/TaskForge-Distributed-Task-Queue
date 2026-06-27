@@ -14,6 +14,13 @@ export interface Task {
   deadline_hours: number;
   created_at: string | null;
   updated_at: string | null;
+  original_filename?: string;
+  output_filename?: string;
+  target_format?: string;
+  error_message?: string;
+  output_size_bytes?: number;
+  conversion_duration?: number;
+  completed_at?: string | null;
 }
 
 export interface TaskCreate {
