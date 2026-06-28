@@ -2,16 +2,16 @@ import redis
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+# override=False ensures Docker-injected env vars take priority over the .env file.
+load_dotenv(override=False)
 
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
-if REDIS_HOST is None or REDIS_PORT is None:
-    raise ValueError("Redis environment variables not found")
-
+# Note: inside Docker, always connect on port 6379 (the container-internal port).
+# Port 6380 is only the host-side mapping defined in docker-compose.yml.
 r = redis.Redis(
     host=REDIS_HOST,
-    port=int(REDIS_PORT),
+    port=REDIS_PORT,
     decode_responses=True
 )
