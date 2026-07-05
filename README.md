@@ -191,7 +191,6 @@ TaskForge/
 
 Mohammed Ayaan KO
 GitHub: [mohammedayaan1610](https://github.com/mohammedayaan1610)
-LinkedIn: *(add your URL)*
 
 ---
 
